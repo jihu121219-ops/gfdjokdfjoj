@@ -13,12 +13,12 @@ local itemLib = require(rep.Modules.ItemLibrary)
 local cosmeticLib = require(rep.Modules.CosmeticLibrary)
 local animLib = require(rep.Modules.AnimationLibrary)
 local util = require(rep.Modules.Utility) -- 유틸리티 모듈 로드
-local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/jihu121219-ops/gfdjokdfjoj/refs/heads/main/fdssfddfs"))()
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 -- [ UI 창 생성 ]
 local Window = Fluent:CreateWindow({
-    Title = "헤응이 만든 슬링샷 핵",
-    SubTitle = "개발자 헤응",
+    Title = "GPDMD Rivals 하이엔드",
+    SubTitle = "by 헤응 (Utility Edition)",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 500),
     Acrylic = false, 
@@ -27,10 +27,10 @@ local Window = Fluent:CreateWindow({
 })
 
 local Tabs = {
-    Combat = Window:AddTab({ Title = "월뱅,사일런트", Icon = "crosshair" }),
-    Visuals = Window:AddTab({ Title = "ESP관련", Icon = "eye" }),
+    Combat = Window:AddTab({ Title = "전투", Icon = "crosshair" }),
+    Visuals = Window:AddTab({ Title = "시각 효과", Icon = "eye" }),
     Movement = Window:AddTab({ Title = "이동/디싱크", Icon = "move" }),
-    Settings = Window:AddTab({ Title = "스나 스킨체인지", Icon = "settings" })
+    Settings = Window:AddTab({ Title = "설정", Icon = "settings" })
 }
 
 -- [ 변수 설정 ]
@@ -144,18 +144,18 @@ for _, v in pairs(plrs:GetPlayers()) do CreateESP(v) end
 plrs.PlayerAdded:Connect(CreateESP)
 
 -- [[ 3. UI 버튼 및 토글 설정 ]] --
-Tabs.Combat:AddToggle("WallBangV2", { Title = "슬링샷", Default = false }):OnChanged(function(v) idk = v end)
-Tabs.Combat:AddToggle("Aimbot", { Title = "에임봇", Default = false }):OnChanged(function(v) AimbotEnabled = v end)
-Tabs.Combat:AddToggle("SilentAim", { Title = "사일런트 에임", Default = false }):OnChanged(function(v) SilentAimEnabled = v end)
-Tabs.Combat:AddSlider("FOV", { Title = "사일런트 범위", Default = 200, Min = 50, Max = 800, Rounding = 0, Callback = function(v) FOVRadius = v end })
+Tabs.Combat:AddToggle("WallBangV2", { Title = "투사체 월뱅 (유도)", Default = false }):OnChanged(function(v) idk = v end)
+Tabs.Combat:AddToggle("Aimbot", { Title = "에임봇 (우클릭 고정)", Default = false }):OnChanged(function(v) AimbotEnabled = v end)
+Tabs.Combat:AddToggle("SilentAim", { Title = "사일런트 에임 (강력)", Default = false }):OnChanged(function(v) SilentAimEnabled = v end)
+Tabs.Combat:AddSlider("FOV", { Title = "범위 (FOV)", Default = 200, Min = 50, Max = 800, Rounding = 0, Callback = function(v) FOVRadius = v end })
 
-Tabs.Visuals:AddToggle("ESP_Master", { Title = "ESP", Default = false }):OnChanged(function(v) ESPEnabled = v end)
+Tabs.Visuals:AddToggle("ESP_Master", { Title = "ESP 활성화", Default = false }):OnChanged(function(v) ESPEnabled = v end)
 Tabs.Visuals:AddToggle("ESP_Box", { Title = "박스", Default = true }):OnChanged(function(v) ESP_Boxes = v end)
 Tabs.Visuals:AddToggle("ESP_Name", { Title = "이름/거리", Default = true }):OnChanged(function(v) ESP_Names = v end)
 
-Tabs.Movement:AddToggle("FlyToggle", { Title = "플라이)", Default = false }):OnChanged(function(v) FlyEnabled = v end)
-Tabs.Movement:AddSlider("FlySlider", { Title = "플라이속도", Min = 1, Max = 5000, Default = 50, Rounding = 0, Callback = function(v) FlySpeed = v end })
-Tabs.Movement:AddToggle("SpinToggle", { Title = "스핀", Default = false }):OnChanged(function(v) SpinEnabled = v end)
+Tabs.Movement:AddToggle("FlyToggle", { Title = "비행 기능 (Fly)", Default = false }):OnChanged(function(v) FlyEnabled = v end)
+Tabs.Movement:AddSlider("FlySlider", { Title = "비행 속도", Min = 1, Max = 5000, Default = 50, Rounding = 0, Callback = function(v) FlySpeed = v end })
+Tabs.Movement:AddToggle("SpinToggle", { Title = "스핀 봇", Default = false }):OnChanged(function(v) SpinEnabled = v end)
 
 Tabs.Settings:AddButton({ Title = "Sniper 스킨 적용", Callback = function() changeSkin("Sniper","Keyper","Dark Matter","SkullCharm") end })
 
