@@ -1,4 +1,4 @@
--- [[ Rivals 전용 하이엔드 + 에임봇 + 사지분해 스핀 + 스킨 체인저 - GPDMD KOREA ]] --
+-- [[ Rivals 전용 하이엔드 + 에임봇 + 사일런트 에임 - GPDMD KOREA ]] --
 
 local g = game
 local plrs = g:GetService("Players")
@@ -7,7 +7,7 @@ local lp = plrs.LocalPlayer
 local uis = game:GetService("UserInputService")
 local mouse = lp:GetMouse()
 
--- [ 모듈 로드 ]
+-- [ 스킨 관련 라이브러리 추가 ]
 local itemLib = require(game:GetService("ReplicatedStorage").Modules.ItemLibrary)
 local cosmeticLib = require(game:GetService("ReplicatedStorage").Modules.CosmeticLibrary)
 local animLib = require(game:GetService("ReplicatedStorage").Modules.AnimationLibrary)
@@ -18,7 +18,7 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 -- [ UI 창 생성 ]
 local Window = Fluent:CreateWindow({
     Title = "GPDMD Rivals 하이엔드",
-    SubTitle = "by 헤응 (Skin & Desync Edition)",
+    SubTitle = "by 헤응 (Aimbot Edition)",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 500),
     Acrylic = false, 
@@ -30,95 +30,181 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
     Combat = Window:AddTab({ Title = "전투", Icon = "crosshair" }),
     Movement = Window:AddTab({ Title = "이동/디싱크", Icon = "move" }),
-    Skins = Window:AddTab({ Title = "스킨 설정", Icon = "brush" }), -- 스킨 탭 추가
     Settings = Window:AddTab({ Title = "설정", Icon = "settings" })
 }
 
 -- [ 변수 설정 ]
-local idk = false 
+local idk = false -- 월뱅
 local FlyEnabled = false
 local FlySpeed = 50
 local SpinEnabled = false
 local SpinSpeed = 50
+
+-- [ 에임봇 설정 ]
 local AimbotEnabled = false
 local SilentAimEnabled = false
-local AimbotSmoothing = 0.1 
+local AimbotSmoothing = 0.1 -- 낮을수록 빠름
 local FOVRadius = 200
 
--- [[ 1. 스킨 체인저 함수 로직 ]] --
+-- [ 자동 획득 설정 ]
+local collectHealth = true
+local collectAmmo = true
+
+-- [[ 스킨 변경 기능 함수 ]] --
 local function changeSkin(gunName, skinName, wrapName, charmName)
-    if not gunName then return end
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-    local normalModel
-    for _, thing in ipairs(player.PlayerScripts.Assets.ViewModels:GetDescendants()) do
-        if thing:IsA("Model") and thing.Name == gunName then
-            normalModel = thing
-            break
-        end
-    end
-    if not normalModel then return end
+	if not gunName then return end
 
-    local viewmodels = itemLib.ViewModels
-    local cosmetics = cosmeticLib.Cosmetics
-    local ogViewmodel = viewmodels[gunName]
+	local Players = game:GetService("Players")
+	local player = Players.LocalPlayer
 
-    if skinName then
-        local skinCosmetic = cosmetics[skinName]
-        if not skinCosmetic or skinCosmetic.Type ~= "Skin" then return end
-        local skinModel
-        for _, thing in ipairs(game:GetService("StarterPlayer").StarterPlayerScripts.Assets.ViewModels:GetDescendants()) do
-            if thing:IsA("Model") and thing.Name == skinName then
-                skinModel = thing
-                break
-            end
-        end
-        if not skinModel then return end
-        local skinViewmodel = viewmodels[skinName]
-        if not ogViewmodel or not skinViewmodel then return end
-        ogViewmodel.Animations = {}
-        for animType, animName in pairs(skinViewmodel.Animations) do ogViewmodel.Animations[animType] = animName end
-        normalModel:ClearAllChildren()
-        for _, part in ipairs(skinModel:GetChildren()) do part:Clone().Parent = normalModel end
-    end
+	local normalModel
+	for _, thing in ipairs(player.PlayerScripts.Assets.ViewModels:GetDescendants()) do
+		if thing:IsA("Model") and thing.Name == gunName then
+			normalModel = thing
+			break
+		end
+	end
+	if not normalModel then return end
 
-    if wrapName then
-        local wrapCosmetic = cosmetics[wrapName]
-        if wrapCosmetic and wrapCosmetic.Type == "Wrap" then
-            local equipped = { [gunName] = { Wrap = wrapCosmetic } }
-            local ok, ClientItem = pcall(function() return require(player.PlayerScripts.Modules.ClientReplicatedClasses.ClientFighter.ClientItem) end)
-            if ok and ClientItem and ClientItem._CreateViewModel then
-                local old = ClientItem._CreateViewModel
-                ClientItem._CreateViewModel = function(self, vmRef)
-                    local isLocal = self.ClientFighter and self.ClientFighter.Player == player
-                    if isLocal and equipped[self.Name] and equipped[self.Name].Wrap and vmRef then
-                        if vmRef.Data then vmRef.Data.Wrap = equipped[self.Name].Wrap end
-                    end
-                    return old(self, vmRef)
-                end
-            end
-        end
-    end
+
+	local viewmodels = itemLib.ViewModels
+	local cosmetics = cosmeticLib.Cosmetics
+	local ogViewmodel = viewmodels[gunName]
+
+	if skinName then
+		local skinCosmetic = cosmetics[skinName]
+		if not skinCosmetic or skinCosmetic.Type ~= "Skin" then return end
+
+		local skinModel
+		for _, thing in ipairs(game:GetService("StarterPlayer").StarterPlayerScripts.Assets.ViewModels:GetDescendants()) do
+			if thing:IsA("Model") and thing.Name == skinName then
+				skinModel = thing
+				break
+			end
+		end
+
+		if not skinModel then return end
+
+		local skinViewmodel = viewmodels[skinName]
+		if not ogViewmodel or not skinViewmodel then return end
+
+		ogViewmodel.Image = skinViewmodel.Image or ogViewmodel.Image
+		ogViewmodel.ImageHighResolution = skinViewmodel.ImageHighResolution or ogViewmodel.ImageHighResolution
+		ogViewmodel.ImageCentered = skinViewmodel.ImageCentered or ogViewmodel.ImageCentered
+		ogViewmodel.EliminationFeedImage = skinViewmodel.EliminationFeedImage or ogViewmodel.EliminationFeedImage
+		ogViewmodel.EliminationFeedImageScale = skinViewmodel.EliminationFeedImageScale or ogViewmodel.EliminationFeedImageScale
+		ogViewmodel.RootPartOffset = skinViewmodel.RootPartOffset or ogViewmodel.RootPartOffset
+
+		ogViewmodel.Animations = {}
+		for animType, animName in pairs(skinViewmodel.Animations) do ogViewmodel.Animations[animType] = animName end
+
+		normalModel:ClearAllChildren()
+
+		for _, part in ipairs(skinModel:GetChildren()) do
+			part:Clone().Parent = normalModel
+		end
+	end
+
+	if wrapName then
+		local wrapCosmetic = cosmetics[wrapName]
+		if not wrapCosmetic or wrapCosmetic.Type ~= "Wrap" then return end
+
+		local equipped = { [gunName] = {} }
+
+		if wrapName == "None" or wrapName == "" then
+			equipped[gunName].Wrap = nil
+		else
+			local wrapData = {}
+			for k, v in pairs(wrapCosmetic) do
+				wrapData[k] = v
+			end
+			wrapData.Name = wrapName
+			wrapData.Type = "Wrap"
+			wrapData.Seed = wrapData.Seed or math.random(1, 1000000)
+
+			local EnumLibModule = game:GetService("ReplicatedStorage").Modules:FindFirstChild("EnumLibrary")
+			if EnumLibModule then
+				local ok, EnumLib = pcall(require, EnumLibModule)
+				if ok and EnumLib and EnumLib.ToEnum then
+					local ok2, enumVal = pcall(EnumLib.ToEnum, EnumLib, wrapName)
+					if ok2 and enumVal then
+						wrapData.Enum = enumVal
+						wrapData.ObjectID = wrapData.ObjectID or enumVal
+					end
+				end
+			end
+
+			equipped[gunName].Wrap = wrapData
+		end
+
+		local ok, ClientItem = pcall(function()
+			return require(player.PlayerScripts.Modules.ClientReplicatedClasses.ClientFighter.ClientItem)
+		end)
+
+		if ok and ClientItem and ClientItem._CreateViewModel then
+			local old = ClientItem._CreateViewModel
+			ClientItem._CreateViewModel = function(self, vmRef)
+				local isLocal = self.ClientFighter and self.ClientFighter.Player == player
+				if isLocal and equipped[self.Name] and equipped[self.Name].Wrap and vmRef then
+					local dataKey = self:ToEnum("Data")
+					local wrapKey = self:ToEnum("Wrap")
+					if vmRef[dataKey] then
+						vmRef[dataKey][wrapKey] = equipped[self.Name].Wrap
+					elseif vmRef.Data then
+						vmRef.Data.Wrap = equipped[self.Name].Wrap
+					end
+				end
+				return old(self, vmRef)
+			end
+		end
+	end
+
+	if charmName then
+		local charmCosmetic = cosmetics[charmName]
+		if not charmCosmetic or charmCosmetic.Type ~= "Charm" then return end
+
+		for _, obj in ipairs(normalModel:GetChildren()) do
+			if obj.Name == "__CHARM" then obj:Destroy() end
+		end
+
+		if charmName == "None" or charmName == "" then return end
+
+		local charmFolder = game:GetService("StarterPlayer").StarterPlayerScripts.Assets:FindFirstChild("Charms")
+		if not charmFolder then return end
+
+		local charmModel = charmFolder:FindFirstChild(charmName)
+		if not charmModel then return end
+
+		local weaponAttach
+		for _, d in ipairs(normalModel:GetDescendants()) do
+			if d:IsA("Attachment") and d.Name == "_charm_pivot_attachment" then
+				weaponAttach = d
+				break
+			end
+		end
+		if not weaponAttach then return end
+	end
 end
 
--- [[ 2. 전투 기능 설정 (기존 유지) ]] --
-Tabs.Combat:AddToggle("WallBangV2", { Title = "투사체 월뱅", Default = false }):OnChanged(function(Value) idk = Value end)
-Tabs.Combat:AddToggle("Aimbot", { Title = "에임봇 (우클릭)", Default = false }):OnChanged(function(Value) AimbotEnabled = Value end)
-Tabs.Combat:AddToggle("SilentAim", { Title = "사일런트 에임", Default = false }):OnChanged(function(Value) SilentAimEnabled = Value end)
+-- [[ 1. 전투 기능 설정 ]] --
+Tabs.Combat:AddToggle("WallBangV2", { Title = "투사체 월뱅 (자동 유도)", Default = false }):OnChanged(function(Value) idk = Value end)
+Tabs.Combat:AddToggle("Aimbot", { Title = "에임봇 (우클릭 유지)", Default = false }):OnChanged(function(Value) AimbotEnabled = Value end)
+Tabs.Combat:AddToggle("SilentAim", { Title = "사일런트 에임 (총알 유도)", Default = false }):OnChanged(function(Value) SilentAimEnabled = Value end)
 
--- [[ 3. 스킨 탭 UI 설정 ]] --
-Tabs.Skins:AddButton({
-    Title = "기본 스킨 적용 (Sniper: Keyper)",
-    Description = "요청하신 Sniper 스킨을 즉시 적용합니다.",
-    Callback = function()
-        changeSkin("Sniper","Keyper","Dark Matter","SkullCharm")
-        Fluent:Notify({ Title = "스킨 변경", Content = "Sniper 스킨이 적용되었습니다!", Duration = 3 })
-    end
+Tabs.Combat:AddSlider("FOV", {
+    Title = "에임 범위 (FOV)",
+    Default = 200,
+    Min = 50,
+    Max = 800,
+    Rounding = 0,
+    Callback = function(Value) FOVRadius = Value end
 })
 
--- [[ 4. 에임봇 & 사일런트 에임 로직 (기존 유지) ]] --
+-- [[ 2. 에임봇 핵심 로직 ]] --
 local function getClosestPlayerToCursor()
-    local target, shortestDistance = nil, FOVRadius
+    local target = nil
+    local shortestDistance = FOVRadius
+
     for _, v in pairs(plrs:GetPlayers()) do
         if v ~= lp and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
             local head = v.Character:FindFirstChild("Head")
@@ -137,6 +223,7 @@ local function getClosestPlayerToCursor()
     return target
 end
 
+-- 에임봇 작동 (우클릭)
 rs.RenderStepped:Connect(function()
     if AimbotEnabled and uis:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
         local target = getClosestPlayerToCursor()
@@ -147,45 +234,130 @@ rs.RenderStepped:Connect(function()
     end
 end)
 
--- [[ 5. 이동 및 사지분해 스핀 로직 (기존 유지) ]] --
+-- [[ 3. 사일런트 에임 & 투사체 로직 ]] --
+local currentTargetHitbox = nil
+
+-- 타겟 갱신 루프
+task.spawn(function()
+    while task.wait(0.1) do
+        if not (idk or SilentAimEnabled) then currentTargetHitbox = nil continue end
+        currentTargetHitbox = getClosestPlayerToCursor()
+    end
+end)
+
+workspace.ChildAdded:Connect(function(v)
+    task.wait() -- 투사체 생성 대기
+    if (idk or SilentAimEnabled) and currentTargetHitbox then
+        local pNames = {["CoreProjectile"]=true, ["Slingshot"]=true, ["Daggers"]=true, ["Bow"]=true, ["Paintball Gun"]=true, ["Bullet"]=true}
+        if pNames[v.Name] or v:IsA("BasePart") then
+            task.spawn(function()
+                local s = tick()
+                while v and v.Parent and (tick() - s) < 1.5 do
+                    if currentTargetHitbox then
+                        v.CFrame = currentTargetHitbox.CFrame
+                        v.AssemblyLinearVelocity = Vector3.zero
+                        if firetouchinterest then
+                            firetouchinterest(currentTargetHitbox, v, 0)
+                            firetouchinterest(currentTargetHitbox, v, 1)
+                        end
+                    end
+                    task.wait()
+                end
+            end)
+        end
+    end
+end)
+
+-- [[ 4. 이동 및 자동 획득 (스핀 로직 수정) ]] --
 Tabs.Movement:AddToggle("FlyToggle", { Title = "비행 기능 (Fly)", Default = false }):OnChanged(function(v) FlyEnabled = v end)
-Tabs.Movement:AddToggle("SpinToggle", { Title = "사지분해 스핀 봇", Default = false }):OnChanged(function(v) SpinEnabled = v end)
+Tabs.Movement:AddSlider("FlySlider", { Title = "비행 속도", Min = 1, Max = 5000, Default = 50, Rounding = 0, Callback = function(v) FlySpeed = v end })
+Tabs.Movement:AddToggle("SpinToggle", { Title = "스핀 봇", Default = false }):OnChanged(function(v) SpinEnabled = v end)
+
+-- UI에 스킨 적용 버튼 추가
+Tabs.Settings:AddButton({
+    Title = "Sniper 스킨 적용",
+    Callback = function()
+        changeSkin("Sniper","Keyper","Dark Matter","SkullCharm")
+    end
+})
 
 rs.RenderStepped:Connect(function()
     if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
         local char = lp.Character
         local hrp = char.HumanoidRootPart
         local hum = char:FindFirstChildOfClass("Humanoid")
+        local cam = workspace.CurrentCamera
         
         -- 비행
         if FlyEnabled then
             local moveDir = Vector3.zero
-            local cam = workspace.CurrentCamera.CFrame
-            if uis:IsKeyDown("W") then moveDir += cam.LookVector end
-            if uis:IsKeyDown("S") then moveDir -= cam.LookVector end
-            if uis:IsKeyDown("A") then moveDir -= cam.RightVector end
-            if uis:IsKeyDown("D") then moveDir += cam.RightVector end
+            if uis:IsKeyDown("W") then moveDir += cam.CFrame.LookVector end
+            if uis:IsKeyDown("S") then moveDir -= cam.CFrame.LookVector end
+            if uis:IsKeyDown("A") then moveDir -= cam.CFrame.RightVector end
+            if uis:IsKeyDown("D") then moveDir += cam.CFrame.RightVector end
             hrp.Velocity = moveDir * FlySpeed
         end
         
-        -- 사지분해 스핀 로직
+        -- [[ 사지분해 댄스 스핀봇 핵심 ]]
         if SpinEnabled then
             local t = tick()
             hrp.CFrame *= CFrame.Angles(0, math.rad(SpinSpeed), 0)
+            
             if hum then hum.PlatformStand = true end
-            -- 관절 분리 로직 (Neck, Waist, Shoulders, Hips 조작 생략 - 기존과 동일하게 작동)
+
+            -- 머리 (Neck) 분리 회전
             local neck = char:FindFirstChild("Head") and char.Head:FindFirstChild("Neck")
             if neck then neck.C0 = CFrame.new(0, 1 + math.sin(t*20)*0.5, 0) * CFrame.Angles(math.rad(t*900%360), math.rad(t*800%360), 0) end
+            
+            -- 허리 (Waist) 상체 분리 회전
             local waist = char:FindFirstChild("UpperTorso") and char.UpperTorso:FindFirstChild("Waist")
             if waist then waist.C0 = CFrame.new(0, 0.8 + math.sin(t*15)*0.7, 0) * CFrame.Angles(0, math.rad(t*1000%360), math.rad(math.sin(t*10)*40)) end
-            -- (기타 팔다리 분리 로직 포함됨)
+
+            -- 팔 (Shoulders) 분리 회전
+            local rShoulder = char:FindFirstChild("RightUpperArm") and char.RightUpperArm:FindFirstChild("RightShoulder")
+            if rShoulder then rShoulder.C0 = CFrame.new(1.5 + math.cos(t*25)*0.5, 0.5, 0) * CFrame.Angles(math.rad(t*1200%360), 0, 0) end
+
+            local lShoulder = char:FindFirstChild("LeftUpperArm") and char.LeftUpperArm:FindFirstChild("LeftShoulder")
+            if lShoulder then lShoulder.C0 = CFrame.new(-1.5 - math.cos(t*25)*0.5, 0.5, 0) * CFrame.Angles(math.rad(t*1200%360), 0, 0) end
+
+            -- 다리 (Hips) 분리 회전
+            local rHip = char:FindFirstChild("RightUpperLeg") and char.RightUpperLeg:FindFirstChild("RightHip")
+            if rHip then rHip.C0 = CFrame.new(0.5, -1 - math.sin(t*30)*0.5, 0) * CFrame.Angles(math.rad(t*1500%360), 0, 0) end
+
+            local lHip = char:FindFirstChild("LeftUpperLeg") and char.LeftUpperLeg:FindFirstChild("LeftHip")
+            if lHip then lHip.C0 = CFrame.new(-0.5, -1 - math.sin(t*30)*0.5, 0) * CFrame.Angles(math.rad(t*1500%360), 0, 0) end
         else
-            if hum and hum.PlatformStand then hum.PlatformStand = false end
+            -- 스핀 해제 시 원래대로 복구
+            if hum and hum.PlatformStand then 
+                hum.PlatformStand = false 
+                local neck = char:FindFirstChild("Head") and char.Head:FindFirstChild("Neck")
+                if neck then neck.C0 = CFrame.new(0, 1, 0) * CFrame.Angles(math.rad(-90), 0, math.rad(180)) end
+                local waist = char:FindFirstChild("UpperTorso") and char.UpperTorso:FindFirstChild("Waist")
+                if waist then waist.C0 = CFrame.new(0, 0.8, 0) end
+                local rs = char:FindFirstChild("RightUpperArm") and char.RightUpperArm:FindFirstChild("RightShoulder")
+                if rs then rs.C0 = CFrame.new(1.5, 0.5, 0) end
+                local ls = char:FindFirstChild("LeftUpperArm") and char.LeftUpperArm:FindFirstChild("LeftShoulder")
+                if ls then ls.C0 = CFrame.new(-1.5, 0.5, 0) end
+                local rh = char:FindFirstChild("RightUpperLeg") and char.RightUpperLeg:FindFirstChild("RightHip")
+                if rh then rh.C0 = CFrame.new(0.5, -1, 0) end
+                local lh = char:FindFirstChild("LeftUpperLeg") and char.LeftUpperLeg:FindFirstChild("LeftHip")
+                if lh then lh.C0 = CFrame.new(-0.5, -1, 0) end
+            end
+        end
+
+        -- 자동 획득
+        if tick() % 0.5 < 0.03 then
+            for _, obj in pairs(workspace:GetChildren()) do
+                if obj.Name == "_drop" and obj:IsA("BasePart") then
+                    firetouchinterest(hrp, obj, 0)
+                    firetouchinterest(hrp, obj, 1)
+                end
+            end
         end
     end
 end)
 
--- 초기 스킨 자동 실행
+-- 초기 스킨 적용
 changeSkin("Sniper","Keyper","Dark Matter","SkullCharm")
 
-Fluent:Notify({ Title = "GPDMD Rivals", Content = "모든 기능 로드 완료!", Duration = 5 })
+Fluent:Notify({ Title = "GPDMD Rivals", Content = "사지분해 댄스 & 스킨 로드 완료!", Duration = 5 })
