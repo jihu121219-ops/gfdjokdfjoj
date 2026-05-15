@@ -43,7 +43,7 @@ local SpinSpeed = 50
 -- [ 에임봇 설정 ]
 local AimbotEnabled = false
 local SilentAimEnabled = false
-local AimbotSmoothing = 0.1 -- 낮을수록 빠름
+local AimbotSmoothing = 0.5 -- 고정력을 위해 약간 높임
 local FOVRadius = 200
 
 -- [ 자동 획득 설정 ]
@@ -200,7 +200,7 @@ Tabs.Combat:AddSlider("FOV", {
     Callback = function(Value) FOVRadius = Value end
 })
 
--- [[ 2. 에임봇 핵심 로직 ]] --
+-- [[ 2. 에임봇 핵심 로직 (수정됨) ]] --
 local function getClosestPlayerToCursor()
     local target = nil
     local shortestDistance = FOVRadius
@@ -223,13 +223,15 @@ local function getClosestPlayerToCursor()
     return target
 end
 
--- 에임봇 작동 (우클릭)
+-- 에임봇 작동 (우클릭 고정력 강화)
 rs.RenderStepped:Connect(function()
     if AimbotEnabled and uis:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
         local target = getClosestPlayerToCursor()
         if target then
             local cam = workspace.CurrentCamera
-            cam.CFrame = cam.CFrame:Lerp(CFrame.new(cam.CFrame.Position, target.Position), AimbotSmoothing)
+            -- 카메라가 타겟의 위치를 정확히 바라보도록 CFrame 계산
+            local targetLook = CFrame.new(cam.CFrame.Position, target.Position)
+            cam.CFrame = cam.CFrame:Lerp(targetLook, AimbotSmoothing)
         end
     end
 end)
@@ -334,14 +336,14 @@ rs.RenderStepped:Connect(function()
                 if neck then neck.C0 = CFrame.new(0, 1, 0) * CFrame.Angles(math.rad(-90), 0, math.rad(180)) end
                 local waist = char:FindFirstChild("UpperTorso") and char.UpperTorso:FindFirstChild("Waist")
                 if waist then waist.C0 = CFrame.new(0, 0.8, 0) end
-                local rs = char:FindFirstChild("RightUpperArm") and char.RightUpperArm:FindFirstChild("RightShoulder")
-                if rs then rs.C0 = CFrame.new(1.5, 0.5, 0) end
-                local ls = char:FindFirstChild("LeftUpperArm") and char.LeftUpperArm:FindFirstChild("LeftShoulder")
-                if ls then ls.C0 = CFrame.new(-1.5, 0.5, 0) end
-                local rh = char:FindFirstChild("RightUpperLeg") and char.RightUpperLeg:FindFirstChild("RightHip")
-                if rh then rh.C0 = CFrame.new(0.5, -1, 0) end
-                local lh = char:FindFirstChild("LeftUpperLeg") and char.LeftUpperLeg:FindFirstChild("LeftHip")
-                if lh then lh.C0 = CFrame.new(-0.5, -1, 0) end
+                local rs_ = char:FindFirstChild("RightUpperArm") and char.RightUpperArm:FindFirstChild("RightShoulder")
+                if rs_ then rs_.C0 = CFrame.new(1.5, 0.5, 0) end
+                local ls_ = char:FindFirstChild("LeftUpperArm") and char.LeftUpperArm:FindFirstChild("LeftShoulder")
+                if ls_ then ls_.C0 = CFrame.new(-1.5, 0.5, 0) end
+                local rh_ = char:FindFirstChild("RightUpperLeg") and char.RightUpperLeg:FindFirstChild("RightHip")
+                if rh_ then rh_.C0 = CFrame.new(0.5, -1, 0) end
+                local lh_ = char:FindFirstChild("LeftUpperLeg") and char.LeftUpperLeg:FindFirstChild("LeftHip")
+                if lh_ then lh_.C0 = CFrame.new(-0.5, -1, 0) end
             end
         end
 
